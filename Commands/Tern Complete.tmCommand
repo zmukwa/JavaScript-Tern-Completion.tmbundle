@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env ruby18 -wKU
+
+$LOAD_PATH.unshift(ENV['TM_BUNDLE_SUPPORT'] + '/json-1.8.3/lib/')
+
+require ENV['TM_SUPPORT_PATH'] + '/lib/ui.rb'
+require 'net/http'
+require 'json/pure'
+require 'shellwords'
+require 'open3'
+
+ENV['PATH'] = "/usr/local/bin:" + ENV['PATH']
+TERN_DIR = File.join(ENV['TM_BUNDLE_SUPPORT'], 'tern/')
+TERN_CMD = Shellwords.shellescape(File.join(TERN_DIR, 'bin', 'tern'))
+
+# chdir to curent dir
+Dir.chdir(ENV['TM_PROJECT_DIRECTORY'])
+
+def startTern
+  fork do 
+    $stdin.reopen(File::open('/dev/null'))
+    $stdout.reopen(File::open('/dev/null', 'w+'))
+    $stderr.reopen(File::open('/dev/null', 'w+'))
+    cmd = Shellwords.shellescape(File.join(TERN_DIR, 'bin', 'tern'))
+    system "mkfifo pipe"
+    system "cat pipe | " + cmd + " &gt; /dev/null"
+  end
+end
+
+def getTernPort
+  begin
+    return File.read(".tern-port")
+  rescue Errno::ENOENT =&gt; ex
+    startTern
+    sleep 1
+    return getTernPort
+  end
+end
+
+jsonbody = {
+  "query" =&gt; {
+    "type" =&gt; "completions",
+    "file" =&gt; "#0",
+    "end" =&gt; {
+      "line" =&gt; ENV['TM_LINE_NUMBER'].to_i - 1,
+      "ch" =&gt; ENV['TM_LINE_INDEX'].to_i
+    }
+  },
+  "files" =&gt; [{
+    "name" =&gt; ENV['TM_FILEPATH'],
+    "text" =&gt; $stdin.read,
+    "type" =&gt; "full"
+  }]  
+}.to_json
+
+http = Net::HTTP.new("localhost", getTernPort)
+response = http.request_post('/', jsonbody, {'Accept' =&gt; 'application/json', 'Content-Type' =&gt; 'application/json'})
+
+res = JSON.parse(response.body)
+
+choices = []
+res["completions"].each {|c|
+  choices &lt;&lt; {
+    "match" =&gt; c,
+    "display" =&gt; c,
+    "insert" =&gt; ""
+  }
+}
+
+TextMate::UI.complete(choices);  
+</string>
+	<key>input</key>
+	<string>document</string>
+	<key>inputFormat</key>
+	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>~ </string>
+	<key>name</key>
+	<string>Tern Complete</string>
+	<key>outputCaret</key>
+	<string>afterOutput</string>
+	<key>outputFormat</key>
+	<string>text</string>
+	<key>outputLocation</key>
+	<string>atCaret</string>
+	<key>scope</key>
+	<string>source.js.es6, source.js</string>
+	<key>uuid</key>
+	<string>B947D6C8-B223-4474-9AFC-95C1D563EB7F</string>
+	<key>version</key>
+	<integer>2</integer>
+</dict>
+</plist>
