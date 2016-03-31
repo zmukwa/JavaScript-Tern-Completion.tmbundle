@@ -4,9 +4,9 @@ Smart Javascript auto-complete for Textmate 2 using [TernJS](http://ternjs.net).
 
 ### Usage
 1. Download and install [JavaScript.Tern.Completion.tmbundle-0.1.zip](https://github.com/fab1an/JavaScript-Tern-Completion.tmbundle/releases/download/release%2F0.1/JavaScript.Tern.Completion.tmbundle-0.1.zip)
-2. Usage: create a sample `.tern-project` file like the one below:
+2. Create `.tern-project` file in your project-directory
 
-```  
+   ```  
 {
   "libs": [
     "browser"
@@ -18,11 +18,10 @@ Smart Javascript auto-complete for Textmate 2 using [TernJS](http://ternjs.net).
     "es_modules": {}
   }
 }
+   ```
+3. Press ⌥␣ (Option + Space) in a `.js` file
 
-```
-
- 3. Press ⌥␣ (Option + Space) in a `.js` file
-
+  ![screenshot](https://github.com/fab1an/JavaScript-Tern-Completion.tmbundle/blob/master/screenshot.png)
 
 
 ### Known issues
