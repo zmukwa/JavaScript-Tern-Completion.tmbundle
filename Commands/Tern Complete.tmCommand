@@ -19,20 +19,29 @@ ENV['PATH'] = "/usr/local/bin:" + ENV['PATH']
 TERN_DIR = File.join(ENV['TM_BUNDLE_SUPPORT'], 'tern/')
 TERN_CMD = Shellwords.shellescape(File.join(TERN_DIR, 'bin', 'tern'))
 
-# chdir to curent dir
+def showErrorAndExit(error)
+  TextMate::UI.alert(:critical, "Error", error)
+  exit
+end
+
+# chdir to work dir
 Dir.chdir(ENV['TM_PROJECT_DIRECTORY'])
+
+if !File.exist?(".tern-project")
+  showErrorAndExit(".tern-project file not found in project directory:\n#{ENV['TM_PROJECT_DIRECTORY']}")
+end
 
 def startTern
   fork do 
     $stdin.reopen(File::open('/dev/null'))
     $stdout.reopen(File::open('/dev/null', 'w+'))
     $stderr.reopen(File::open('/dev/null', 'w+'))
-    cmd = Shellwords.shellescape(File.join(TERN_DIR, 'bin', 'tern'))
     system "mkfifo pipe"
-    system "cat pipe | " + cmd + " &gt; /dev/null"
+    system "cat pipe | #{TERN_CMD} &gt; /dev/null"
   end
 end
 
+# Get Port and Start Tern if not available
 def getTernPort
   begin
     return File.read(".tern-port")
@@ -43,6 +52,7 @@ def getTernPort
   end
 end
 
+# Query completion
 jsonbody = {
   "query" =&gt; {
     "type" =&gt; "completions",
@@ -61,6 +71,10 @@ jsonbody = {
 
 http = Net::HTTP.new("localhost", getTernPort)
 response = http.request_post('/', jsonbody, {'Accept' =&gt; 'application/json', 'Content-Type' =&gt; 'application/json'})
+
+if response.code != "200"
+  showErrorAndExit("Tern responded with Code: #{response.code}\n\n\n#{response.body}")
+end
 
 res = JSON.parse(response.body)
 
