@@ -60,7 +60,11 @@ jsonbody = {
     "end" =&gt; {
       "line" =&gt; ENV['TM_LINE_NUMBER'].to_i - 1,
       "ch" =&gt; ENV['TM_LINE_INDEX'].to_i
-    }
+    },
+    "types" =&gt; true,
+    "docs" =&gt; true,
+    "urls" =&gt; true,
+    "origins" =&gt; true
   },
   "files" =&gt; [{
     "name" =&gt; ENV['TM_FILEPATH'],
@@ -69,6 +73,7 @@ jsonbody = {
   }]  
 }.to_json
 
+# Send Request
 http = Net::HTTP.new("localhost", getTernPort)
 response = http.request_post('/', jsonbody, {'Accept' =&gt; 'application/json', 'Content-Type' =&gt; 'application/json'})
 
@@ -78,12 +83,44 @@ end
 
 res = JSON.parse(response.body)
 
+REGEXP_FN = /^fn\(([^\)\(]*)\)/
+REGEXP_PARAMS = /([^,]+)[,\s]{0,2}/
+
 choices = []
 res["completions"].each {|c|
+  name = c["name"]
+  type = c["type"]
+  doc = c["doc"]
+  
+  # displayed name 
+  display = name.ljust(20) + "\t"
+  
+  # parse fn parameters
+  fn = REGEXP_FN.match(type)
+  params = []
+  if !fn.nil?
+    params = fn[1].scan(REGEXP_PARAMS).flatten
+  end
+  
+  # insert template
+  insert = ""
+  if !fn.nil?
+    paramStr = params.each_with_index.map { |value, index|
+      isString = value.split(":").last().strip() === "string"
+      
+      template = "${#{index+1}:#{value}}"
+      template = "'#{template}'" if isString
+      template
+      
+    }.join(", ")
+    
+    insert = "(" + paramStr + ")"
+  end
+  
   choices &lt;&lt; {
-    "match" =&gt; c,
-    "display" =&gt; c,
-    "insert" =&gt; ""
+    "match" =&gt; name,
+    "display" =&gt; "#{display}#{type}",
+    "insert" =&gt; insert
   }
 }
 
