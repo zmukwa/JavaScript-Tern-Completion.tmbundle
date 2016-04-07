@@ -33,11 +33,9 @@ end
 
 def startTern
   fork do 
-    $stdin.reopen(File::open('/dev/null'))
     $stdout.reopen(File::open('/dev/null', 'w+'))
     $stderr.reopen(File::open('/dev/null', 'w+'))
-    system "mkfifo pipe"
-    system "cat pipe | #{TERN_CMD} &gt; /dev/null"
+    system "#{TERN_CMD} --ignore-stdin &gt; /dev/null"
   end
 end
 
