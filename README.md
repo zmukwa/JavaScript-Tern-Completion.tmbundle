@@ -3,7 +3,7 @@
 Smart Javascript auto-complete for Textmate 2 using [TernJS](http://ternjs.net).
 
 ### Usage
-1. Download and install [JavaScript.Tern.Completion.tmbundle-0.3.zip](https://github.com/fab1an/JavaScript-Tern-Completion.tmbundle/releases/download/release%2F0.3/JavaScript.Tern.Completion.tmbundle-0.3.zip)
+1. Clone into `~/Library/Application Support/Avian/Pristine Copy/Bundles`
 2. Create `.tern-project` file in your project-directory (more [info](http://ternjs.net/doc/manual.html))
 
    ```javascript
@@ -25,6 +25,3 @@ Smart Javascript auto-complete for Textmate 2 using [TernJS](http://ternjs.net).
 
 ### Dependencies
 `node` must be installed and on your path.
-
-### ToDo
-* Use more of tern's [functionality](http://ternjs.net/doc/manual.html) to create the list of symbols, jump to variables and so on.
